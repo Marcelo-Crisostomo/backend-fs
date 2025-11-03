@@ -1,14 +1,14 @@
-# Usa una imagen liviana de Java 17
-FROM eclipse-temurin:17-jdk-alpine
-
-# Directorio de trabajo dentro del contenedor
+# Etapa 1: Build
+FROM maven:3.8.6-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copia el jar generado al contenedor
-COPY target/*.jar app.jar
-
-# Expone el puerto (Render usa el 10000 internamente)
+# Etapa 2: Runtime
+FROM eclipse-temurin:17-jdk-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Comando para ejecutar el jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
